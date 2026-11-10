@@ -26,3 +26,4 @@
 ### Read/write persistence and app icon
 
 - Extended the opt-in integration test with a fresh 5 MB normal FAT container. Required a writable volume root, wrote a unique payload to `persistence.txt`, verified ejection, resolved the new read-only mount, and compared the recovered bytes. Verified final ejection and removed the fixture. All 14 tests passed with the installed FUSE-T backend. The ub-mode companion tools reported no supported changed sources to analyze.
+- Created the app icon from the supplied faceted blue and green monogram and packaged it as an ICNS from a transparent 1024 px master. The original bundle had no icon entry. Rebuilt the release, decoded all ten 1× and 2× representations, verified the bundle signature, and visually checked the artwork that macOS Icon Services returned at 32 and 128 points.
