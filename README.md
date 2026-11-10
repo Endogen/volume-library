@@ -35,7 +35,7 @@ Newly added volumes default to **read-only**. For write access, open **Advanced 
 
 Choose **New Volume…** from the menu bar or library, or press **⌘N**. Set a capacity of at least 5 MiB, enter and confirm a password, then choose a location and filename. The app creates a standard AES-encrypted container with a FAT filesystem and adds it to the library ready to unlock. Creation preserves existing files at the chosen destination.
 
-<img src="docs/screenshots/create.jpg" width="450" alt="The New Volume window asks for capacity, a password and confirmation before choosing a location">
+<img src="docs/screenshots/create.png" width="450" alt="The New Volume window asks for capacity, a password and confirmation before choosing a location">
 
 ## Manage volumes
 
