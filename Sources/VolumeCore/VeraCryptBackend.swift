@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public struct BackendInfo: Equatable, Sendable {
     public let version: String
@@ -20,6 +21,17 @@ public enum IntegrationError: Error, LocalizedError, Equatable {
         case .credentials: "Couldn’t unlock this volume. Check the password. This release supports default PIM and no keyfiles."
         case .busy: "This volume is in use. Close files using it, then try ejecting again."
         case .operationFailed: "VeraCrypt couldn’t complete this operation. Refresh its status or open VeraCrypt for more details."
+        }
+    }
+}
+
+public enum CreationError: LocalizedError {
+    case invalidSize, formatFailed
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidSize: "Enter a size of at least 5 MiB."
+        case .formatFailed: "VeraCrypt couldn’t create the FAT container. Check available space and try another size or location."
         }
     }
 }
@@ -68,6 +80,37 @@ public struct VeraCryptBackend: VolumeBackend {
         try await verifySignature()
         let result = try await runner.run(executable, arguments: ["--text", "--non-interactive", "--list", "--verbose"])
         return try BackendContract.parseMounts(result.combined, exitCode: result.code)
+    }
+
+    public func create(at destination: URL, sizeMiB: Int, password: String) async throws {
+        try BackendContract.validatePath(destination.path)
+        let input = try BackendContract.passwordInput(password)
+        let (bytes, overflow) = sizeMiB.multipliedReportingOverflow(by: 1_048_576)
+        guard sizeMiB >= 5, !overflow else { throw CreationError.invalidSize }
+        let files = FileManager.default
+        guard !files.fileExists(atPath: destination.path) else { throw CocoaError(.fileWriteFileExists) }
+        let parent = destination.deletingLastPathComponent()
+        if let available = try parent.resourceValues(forKeys: [.volumeAvailableCapacityKey]).volumeAvailableCapacity,
+           available < bytes { throw CocoaError(.fileWriteOutOfSpace) }
+
+        _ = try await probe()
+        // Build beside the destination so the final exclusive rename is on the same filesystem.
+        let staging = parent.appendingPathComponent(".volume-library-\(UUID())", isDirectory: true)
+        try files.createDirectory(at: staging, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        defer { try? files.removeItem(at: staging) }
+        let file = staging.appendingPathComponent("container.hc")
+        let result = try await runner.run(executable, arguments: [
+            "--text", "--non-interactive", "--stdin", "--create", file.path, "--size=\(bytes)",
+            "--volume-type=normal", "--encryption=AES", "--hash=sha-512", "--filesystem=FAT",
+            "--pim=0", "--keyfiles=", "--random-source=/dev/urandom"
+        ], input: input, timeout: max(120, Double(sizeMiB) * 2))
+        guard result.code == 0 else { throw CreationError.formatFailed }
+        guard try file.resourceValues(forKeys: [.fileSizeKey]).fileSize == bytes else { throw CreationError.formatFailed }
+        guard renamex_np(file.path, destination.path, UInt32(RENAME_EXCL)) == 0 else {
+            let code = errno
+            if code == EEXIST { throw CocoaError(.fileWriteFileExists) }
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(code))
+        }
     }
 
     public func mount(path: String, password: String, readOnly: Bool) async throws {

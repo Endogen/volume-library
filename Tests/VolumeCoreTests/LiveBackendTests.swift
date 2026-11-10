@@ -32,12 +32,7 @@ func installedBackendPersistsFileAcrossMounts() async throws {
     }
 
     do {
-        let create = try await ProcessRunner().run(app.appendingPathComponent("Contents/MacOS/VeraCrypt"),
-            arguments: ["--text", "--non-interactive", "--stdin", "--create", path, "--size=5M",
-                        "--volume-type=normal", "--encryption=AES", "--hash=sha-512", "--filesystem=FAT",
-                        "--pim=0", "--keyfiles=", "--random-source=/dev/urandom"],
-            input: try BackendContract.passwordInput(secret), timeout: 60)
-        try #require(create.code == 0)
+        try await backend.create(at: URL(fileURLWithPath: path), sizeMiB: 5, password: secret)
 
         let filename = "persistence.txt"
         let contents = Data("Volume Library round trip \(UUID().uuidString)\n".utf8)
