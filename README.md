@@ -2,7 +2,7 @@
 
 Create, unlock and eject VeraCrypt containers from the macOS menu bar. Volume Library provides a native SwiftUI interface and opens mounted volumes in Finder. Your installed copy of VeraCrypt handles encryption and disk access.
 
-**[Download for Apple silicon](https://github.com/Endogen/volume-library/releases/download/v0.1.0/Volume-Library-0.1.0-macOS-arm64.zip)** · [Release notes and checksum](https://github.com/Endogen/volume-library/releases/tag/v0.1.0)
+**[Download for Apple silicon](https://github.com/Endogen/volume-library/releases/download/v0.1.0/Volume-Library-0.1.0-macOS-arm64.zip)** · [Release notes and checksum](https://github.com/Endogen/volume-library/releases/tag/v0.1.0) · [Website](https://endogen.github.io/volume-library/)
 
 <table>
 <tr><th align="left">In the menu bar</th><th align="left">In the library</th></tr>
