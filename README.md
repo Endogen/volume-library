@@ -6,6 +6,8 @@ Volume Library is a native menu bar app for unlocking existing VeraCrypt file co
 
 Open `build/Volume Library.app`. Click the lock or drive in the menu bar and choose **Add Volume…**. Choose an existing container, click **Unlock**, and enter its volume password. Newly added volumes default to read-only. Click the folder to open the mounted filesystem in Finder, then click the eject button when finished.
 
+Choose **New Volume…** from the menu bar, the library, or **File** (⌘N). Enter the capacity in MiB and confirm a password, then choose a new filename. VeraCrypt creates a standard AES-encrypted FAT container with the default PIM and adds it to your library, ready to unlock.
+
 **Move to Menu Bar** hides the app windows and removes its Dock icon. Click the menu bar icon and choose **Open Volume Library** to restore the window. The yellow minimize button retains its usual Dock behavior.
 
 Right-click a saved entry to rename it, toggle its favorite status, locate a moved container, or remove its library reference. **Eject All** acts on mounts that this app opened or that you explicitly took over using **Manage**. If you quit with volumes mounted, the app offers distinct choices for ejection and leaving them mounted.
@@ -14,9 +16,9 @@ Right-click a saved entry to rename it, toggle its favorite status, locate a mov
 
 The verified combination is Apple silicon, macOS 27.0.1, VeraCrypt 1.26.31 for FUSE-T, and FUSE-T 1.2.9. The deployment target is macOS 14. The adapter accepts the official signed VeraCrypt 1.26.31 executable and looks in `/Applications/VeraCrypt.app` by default. Settings can locate another installed copy. [VeraCrypt downloads](https://veracrypt.io/en/Downloads.html)
 
-Use a normal, password-only file container with default PIM. Read/write access requires explicitly confirming that the volume has no hidden volume to protect. In the unlock window, expand **Advanced options**, turn off **Mount read-only**, and confirm the volume type. The live test verified that a file written to a normal FAT container persisted across ejection and a read-only remount. Use VeraCrypt itself for container creation, keyfiles, custom PIM, hidden-volume protection and operations that require administrator authorization.
+Use a normal, password-only file container with default PIM. Read/write access requires explicitly confirming that the volume has no hidden volume to protect. In the unlock window, expand **Advanced options**, turn off **Mount read-only**, and confirm the volume type. The live test verified that a file written to a normal FAT container persisted across ejection and a read-only remount. Use VeraCrypt itself for other volume formats, keyfiles, custom PIM, hidden-volume protection and operations that require administrator authorization.
 
-The app passes the password to VeraCrypt over the subprocess's standard input. Only file references, names, favorites and preferences are saved. The local library lives at `~/Library/Application Support/VolumeLibrary/library.json`. Settings offers a separate in-memory demo with sample volumes.
+The app passes the password to VeraCrypt over the subprocess's standard input. Only file references, names, favorites and preferences are saved. The local library lives at `~/Library/Application Support/VolumeLibrary/library.json`.
 
 ## Build and test
 

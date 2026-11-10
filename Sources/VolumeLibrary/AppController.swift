@@ -10,6 +10,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private let popover = NSPopover()
     private var libraryWindow: NSWindow?
     private var unlockWindow: NSWindow?
+    private var creationWindow: NSWindow?
     private var settingsWindow: NSWindow?
     private var polling: Task<Void, Never>?
     private var terminationApproved = false
@@ -90,6 +91,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard model.busyPath == nil else { return }
         libraryWindow?.orderOut(nil)
         settingsWindow?.orderOut(nil)
+        creationWindow?.close()
         unlockWindow?.close()
         closeMenu()
         NSApp.setActivationPolicy(.accessory)
@@ -116,11 +118,32 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func showSettings() {
         closeMenu()
         if settingsWindow == nil {
-            settingsWindow = makeWindow(title: "Settings", width: 500, height: 470,
+            settingsWindow = makeWindow(title: "Settings", width: 468, height: 240,
                                         root: SettingsView(model: model, controller: self), resizable: false)
         }
         present(settingsWindow)
     }
+
+    @objc func newVolume() {
+        guard model.canCreate else { return }
+        closeMenu()
+        if creationWindow == nil {
+            creationWindow = makeWindow(title: "New Volume", width: 450, height: 328,
+                                        root: NewVolumeView(model: model, controller: self), resizable: false)
+        }
+        present(creationWindow)
+    }
+
+    func destinationForNewVolume() -> URL? {
+        let panel = NSSavePanel()
+        panel.title = "Save New Volume"
+        panel.nameFieldStringValue = "Untitled.hc"
+        panel.canCreateDirectories = true
+        panel.prompt = "Create"
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    func closeCreation() { creationWindow?.close() }
 
     @objc func addVolume() { chooseVolume(replacing: nil) }
     func chooseVolume(replacing id: UUID?) {
@@ -240,13 +263,18 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         showLibrary(); return false
     }
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        if sender === unlockWindow && model.busyPath != nil { return false }
+        if (sender === unlockWindow || sender === creationWindow) && model.busyPath != nil { return false }
         return true
     }
     func windowWillClose(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow, window === unlockWindow else { return }
-        window.contentView = nil
-        unlockWindow = nil
+        guard let window = notification.object as? NSWindow else { return }
+        if window === creationWindow {
+            window.contentView = nil
+            creationWindow = nil
+        } else if window === unlockWindow {
+            window.contentView = nil
+            unlockWindow = nil
+        }
     }
 
     private func makeWindow<Content: View>(title: String, width: CGFloat, height: CGFloat,
@@ -279,6 +307,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
         appMenu.addItem(withTitle: "Quit Volume Library", action: #selector(requestQuit), keyEquivalent: "q")
         let appItem = NSMenuItem(); appItem.submenu = appMenu; main.addItem(appItem)
         let file = NSMenu(title: "File")
+        file.addItem(withTitle: "New Volume…", action: #selector(newVolume), keyEquivalent: "n")
         file.addItem(withTitle: "Add Volume…", action: #selector(addVolume), keyEquivalent: "o")
         file.addItem(withTitle: "Open Volume Library", action: #selector(showLibrary), keyEquivalent: "1")
         file.addItem(withTitle: "Move to Menu Bar", action: #selector(moveToMenuBar), keyEquivalent: "")

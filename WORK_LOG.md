@@ -27,3 +27,10 @@
 
 - Extended the opt-in integration test with a fresh 5 MB normal FAT container. Required a writable volume root, wrote a unique payload to `persistence.txt`, verified ejection, resolved the new read-only mount, and compared the recovered bytes. Verified final ejection and removed the fixture. All 14 tests passed with the installed FUSE-T backend. The ub-mode companion tools reported no supported changed sources to analyze.
 - Created the app icon from the supplied faceted blue and green monogram and packaged it as an ICNS from a transparent 1024 px master. The original bundle had no icon entry. Rebuilt the release, decoded all ten 1× and 2× representations, verified the bundle signature, and visually checked the artwork that macOS Icon Services returned at 32 and 128 points.
+
+### Menu commands, settings and creation
+
+- Removed the Settings demo controls and reduced its content area to 468 × 240 points. Confirmed the installed window displays backend, appearance and login options.
+- Added a 130 ms row highlight to the popover commands. Disabled actions suppress the highlight and Reduce Motion applies it immediately.
+- Added New Volume to the popover, library and File menu. The native form takes capacity and a confirmed password. The signed CLI creates a standard FAT volume in a private staging directory. An exclusive rename publishes the completed file at its destination. The app adds the file to the library without mounting it.
+- Tested refusal to replace an existing file, then exercised the production creation method in the live FUSE-T write/eject/remount persistence test. Rebuilt and updated the installed app. Used its native form and save panel to create a second disposable 5 MiB container and confirmed it appeared as Locked. Removed the test reference and fixture.

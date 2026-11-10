@@ -28,6 +28,7 @@ final class AppModel {
         loadLibrary()
     }
 
+    var canCreate: Bool { !demo && busyPath == nil && !libraryLoadFailed }
     var mountedCount: Int { state.mounts.count }
     var canOperate: Bool { backendInfo != nil && state.isFresh && busyPath == nil && !isRefreshing }
     var managedMounts: [Mount] { state.ejectTargets }
@@ -155,6 +156,17 @@ final class AppModel {
     }
 
     func adopt(_ mount: Mount) { state.adopt(mount.container) }
+
+    func create(at url: URL, sizeMiB: Int, password: String) async throws {
+        guard canCreate, let installed = backend as? VeraCryptBackend else {
+            throw CocoaError(.userCancelled)
+        }
+        busyPath = url.path
+        defer { busyPath = nil }
+        try await installed.create(at: url, sizeMiB: sizeMiB, password: password)
+        notice = nil
+        add(url)
+    }
 
     func add(_ url: URL, replacing id: UUID? = nil) {
         guard !libraryLoadFailed else { notice = "The saved library could not be read. Its file has been preserved."; return }

@@ -49,7 +49,7 @@ struct MenuPanel: View {
                     if model.volumes.isEmpty && model.externalMounts.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("No saved volumes").font(.system(size: 14, weight: .medium))
-                            Text("Add an existing container to keep it in your menu bar.")
+                            Text("Create a volume or add an existing container.")
                                 .font(.system(size: 12)).foregroundStyle(.secondary)
                         }.padding(.vertical, 8)
                     }
@@ -62,6 +62,8 @@ struct MenuPanel: View {
 
             Divider().padding(.vertical, 14)
             VStack(alignment: .leading, spacing: 2) {
+                action("New Volume…", symbol: "doc.badge.plus", run: controller.newVolume)
+                    .disabled(!model.canCreate)
                 action("Add Volume…", symbol: "plus", run: controller.addVolume)
                 action("Open Volume Library", symbol: "rectangle.on.rectangle", run: controller.showLibrary)
                 action("Eject All…", symbol: "eject", run: controller.confirmEjectAll)
@@ -83,9 +85,30 @@ struct MenuPanel: View {
             HStack {
                 Text(title)
                 Spacer()
-                Image(systemName: symbol).font(.system(size: 12)).foregroundStyle(.tertiary)
+                Image(systemName: symbol).font(.system(size: 12)).foregroundStyle(.secondary)
             }.frame(maxWidth: .infinity, minHeight: 29).contentShape(Rectangle())
-        }.buttonStyle(.plain).font(.system(size: 14))
+        }
+        .buttonStyle(MenuCommandStyle())
+        .font(.system(size: 14))
+        .padding(.horizontal, -7)
+    }
+}
+
+private struct MenuCommandStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovered = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        let highlighted = enabled && hovered
+        return configuration.label
+            .padding(.horizontal, 7)
+            .background(.primary.opacity(enabled && configuration.isPressed ? 0.16 : highlighted ? 0.09 : 0),
+                        in: RoundedRectangle(cornerRadius: 6))
+            .contentShape(Rectangle())
+            .opacity(enabled ? 1 : 0.45)
+            .onHover { hovered = $0 }
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.13), value: highlighted)
     }
 }
 

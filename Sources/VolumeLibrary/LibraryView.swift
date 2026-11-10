@@ -15,6 +15,8 @@ struct LibraryView: View {
                 }
                 Spacer()
                 if model.demo { DemoLabel() }
+                Button("New Volume…", systemImage: "doc.badge.plus", action: controller.newVolume)
+                    .disabled(!model.canCreate)
                 Button("Add Volume…", systemImage: "plus", action: controller.addVolume)
             }.padding(24)
             if let message = model.setupMessage {
@@ -30,7 +32,7 @@ struct LibraryView: View {
                     ContentUnavailableView {
                         Label("A place for your private files", systemImage: "externaldrive")
                     } description: {
-                        Text("Add an existing VeraCrypt container.\nYour files stay exactly where they are.")
+                        Text("Create a volume or add an existing VeraCrypt container.")
                     } actions: { Button("Add Volume…", action: controller.addVolume) }
                     .padding(.top, 26)
                 } else {

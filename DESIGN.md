@@ -17,7 +17,7 @@ The first release should make the daily workflow feel like a Mac utility: choose
 
 | First release | Later releases |
 | --- | --- |
-| Register existing file containers with a native file picker or drag and drop | Container creation and formatting |
+| Create standard AES/FAT containers or register existing files with a native file picker or drag and drop | Hidden-volume creation and device formatting |
 | Rename, reorder, favorite, locate, and remove saved references | Password changes and header backup or restoration |
 | Unlock supported containers and open mounted filesystems in Finder | Device or partition volumes |
 | Eject individual managed volumes and eject all managed volumes | Advanced hidden-volume workflows |
