@@ -1,0 +1,6 @@
+.build/
+build/
+.swiftpm/
+.metrics/
+.DS_Store
+work/
