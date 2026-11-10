@@ -22,3 +22,7 @@
 - Verified menu bar hiding, status-button activation, popover visibility and reopening using an instrumented copy of the native app. Compared the reference with the actual controls in light and dark appearances. See the design QA report.
 - Ran the ub-mode companion tools. Their analyzers do not support these Swift sources, so they supplied no Swift complexity, duplication or mutation scores. The Swift tests and native checks provide the verification here.
 - Final checks passed for 14 tests including the opt-in live round trip, the optimized app build, Info.plist validation and strict signature verification. The local build uses ad-hoc signing. Local Git history records the work on main. No remote is configured.
+
+### Read/write persistence and app icon
+
+- Extended the opt-in integration test with a fresh 5 MB normal FAT container. Required a writable volume root, wrote a unique payload to `persistence.txt`, verified ejection, resolved the new read-only mount, and compared the recovered bytes. Verified final ejection and removed the fixture. All 14 tests passed with the installed FUSE-T backend. The ub-mode companion tools reported no supported changed sources to analyze.

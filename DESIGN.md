@@ -11,7 +11,7 @@ Build a small native Mac app for opening and ejecting existing VeraCrypt contain
 
 The first release should make the daily workflow feel like a Mac utility: choose a volume, unlock it, open it in Finder, and eject it when finished. It must remain useful with its main window closed. No account, cloud service, telemetry, or networking is required for the core workflow.
 
-**Implemented direction — Concept 3, Menu Bar First.** The local SwiftUI/AppKit build pairs a 352 × 520 point menu bar popover with a compact library and a separate unlock window. The installed VeraCrypt 1.26.31 FUSE-T build passed a disposable-container read-only mount and eject on this Mac. The remaining sections record the original design targets. The README identifies the features and platform combination in the current build. [Build and usage](README.md)
+**Implemented direction — Concept 3, Menu Bar First.** The local SwiftUI/AppKit build pairs a 352 × 520 point menu bar popover with a compact library and a separate unlock window. The installed VeraCrypt 1.26.31 FUSE-T build passed a disposable-container write, eject and read-only remount on this Mac. The remaining sections record the original design targets. The README identifies the features and platform combination in the current build. [Build and usage](README.md)
 
 ## Scope
 
@@ -179,7 +179,7 @@ Logs contain operation categories, durations, and redacted error classes by defa
 
 ## Feasibility checks before implementation
 
-Run these against disposable containers, never the user's real data. Capture a supported combination of macOS, architecture, VeraCrypt release, and filesystem integration. The read-only path, including stdin, filesystem mount, status reconciliation, and eject, passed on macOS 27.0.1 with Apple silicon, VeraCrypt 1.26.31, and FUSE-T 1.2.9. Interactive administrator escalation and busy-volume recovery remain outside the live verification.
+Run these against disposable containers, never the user's real data. Capture a supported combination of macOS, architecture, VeraCrypt release, and filesystem integration. A file written through a read/write mount survived ejection and a verified read-only remount. Stdin, filesystem access, status reconciliation and eject passed on macOS 27.0.1 with Apple silicon, VeraCrypt 1.26.31, and FUSE-T 1.2.9. Interactive administrator escalation and busy-volume recovery remain outside the live verification.
 
 | Check | Required outcome |
 | --- | --- |

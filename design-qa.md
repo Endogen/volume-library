@@ -26,4 +26,4 @@ For the comparison sheet, the concept menu crop is 499 × 727 px and the unlock 
 
 ## Interaction coverage
 
-The demo checks exercised unlock errors, success, ejection and quit choices. In live mode the file picker added a disposable container, the unlock window mounted it, the library showed Mounted with Finder and Eject actions, and ejection restored Locked. The test reference was removed and VeraCrypt reported zero remaining mounts. Full VoiceOver navigation, login after a restart and a live read/write mount remain unverified.
+The demo checks exercised unlock errors, success, ejection and quit choices. In live mode the file picker added a disposable container, the unlock window mounted it, the library showed Mounted with Finder and Eject actions, and ejection restored Locked. The test reference was removed and VeraCrypt reported zero remaining mounts. The live backend test also recovered identical file contents after a read/write mount, eject and read-only remount. Full VoiceOver navigation and login after a restart remain unverified.
