@@ -34,3 +34,9 @@
 - Added a 130 ms row highlight to the popover commands. Disabled actions suppress the highlight and Reduce Motion applies it immediately.
 - Added New Volume to the popover, library and File menu. The native form takes capacity and a confirmed password. The signed CLI creates a standard FAT volume in a private staging directory. An exclusive rename publishes the completed file at its destination. The app adds the file to the library without mounting it.
 - Tested refusal to replace an existing file, then exercised the production creation method in the live FUSE-T write/eject/remount persistence test. Rebuilt and updated the installed app. Used its native form and save panel to create a second disposable 5 MiB container and confirmed it appeared as Locked. Removed the test reference and fixture.
+
+### Background status and README screenshot
+
+- Reproduced the disabled Unlock button with a paused backend check. Routine polling now coalesces duplicate reads and publishes only changes to the mount list, backend availability or error. An operation or backend change supersedes pending reads. The menu bar icon updates when its status changes. Regression tests cover a click during a pending check, unchanged observation, failure and recovery.
+- All 17 tests passed, including the live read/write persistence test. Updated and relaunched the installed app with the library open.
+- Recaptured the New Volume content in dark appearance with its native background and replaced the framed JPEG in the README.

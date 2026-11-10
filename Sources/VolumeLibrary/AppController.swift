@@ -37,7 +37,7 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(10))
                 guard !Task.isCancelled else { return }
-                if model.backendInfo != nil { await model.refresh() }
+                await model.refresh()
                 updateStatusIcon()
             }
         }
@@ -61,10 +61,11 @@ final class AppController: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func updateStatusIcon() {
         let symbol = model.state.isFresh ? (model.mountedCount > 0 ? "externaldrive.fill" : "lock") : "exclamationmark.triangle"
         let description = "Volume Library, \(model.state.isFresh ? "\(model.mountedCount) mounted" : "status unknown")"
-        statusItem?.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
-        statusItem?.button?.image?.isTemplate = true
-        statusItem?.button?.toolTip = description
-        statusItem?.button?.setAccessibilityLabel(description)
+        guard let button = statusItem?.button, button.toolTip != description else { return }
+        button.image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
+        button.image?.isTemplate = true
+        button.toolTip = description
+        button.setAccessibilityLabel(description)
     }
 
     @objc private func toggleMenu() {

@@ -34,7 +34,7 @@ struct SettingsView: View {
                         if model.setupMessage != nil { Button("Downloads", action: controller.openDownloads) }
                         Spacer()
                         Button("Open VeraCrypt", action: controller.openVeraCrypt)
-                    }.disabled(model.busyPath != nil || model.isRefreshing)
+                    }.disabled(model.busyPath != nil)
                 }
                 Divider()
                 Picker("Appearance", selection: $appearance) {

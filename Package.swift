@@ -8,7 +8,8 @@ let package = Package(
     targets: [
         .target(name: "VolumeCore"),
         .executableTarget(name: "VolumeLibrary", dependencies: ["VolumeCore"]),
-        .testTarget(name: "VolumeCoreTests", dependencies: ["VolumeCore"])
+        .testTarget(name: "VolumeCoreTests", dependencies: ["VolumeCore"]),
+        .testTarget(name: "VolumeLibraryTests", dependencies: ["VolumeLibrary", "VolumeCore"])
     ],
     swiftLanguageModes: [.v5]
 )

@@ -10,7 +10,7 @@ final class AppModel {
     var setupMessage: String?
     var notice: String?
     var busyPath: String?
-    var isRefreshing = false
+    @ObservationIgnored private var refreshID: UUID?
     var demo = false
     var libraryLoadFailed = false
     var appPath: String {
@@ -19,18 +19,18 @@ final class AppModel {
     private var backend: any VolumeBackend
     private let store: LibraryStore
 
-    init() {
+    init(backend: (any VolumeBackend)? = nil, store: LibraryStore? = nil) {
         let initialPath = UserDefaults.standard.string(forKey: "veraCryptAppPath") ?? "/Applications/VeraCrypt.app"
         appPath = initialPath
-        backend = VeraCryptBackend(appURL: URL(fileURLWithPath: initialPath))
+        self.backend = backend ?? VeraCryptBackend(appURL: URL(fileURLWithPath: initialPath))
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        store = LibraryStore(url: support.appendingPathComponent("VolumeLibrary/library.json"))
+        self.store = store ?? LibraryStore(url: support.appendingPathComponent("VolumeLibrary/library.json"))
         loadLibrary()
     }
 
     var canCreate: Bool { !demo && busyPath == nil && !libraryLoadFailed }
     var mountedCount: Int { state.mounts.count }
-    var canOperate: Bool { backendInfo != nil && state.isFresh && busyPath == nil && !isRefreshing }
+    var canOperate: Bool { backendInfo != nil && state.isFresh && busyPath == nil }
     var managedMounts: [Mount] { state.ejectTargets }
     var favorites: [SavedVolume] { volumes.filter { $0.favorite && mount(for: $0) == nil } }
     var mountedVolumes: [SavedVolume] { volumes.filter { mount(for: $0) != nil } }
@@ -50,29 +50,47 @@ final class AppModel {
     }
 
     func reconnect() async {
-        guard busyPath == nil, !isRefreshing else { return }
+        guard busyPath == nil else { return }
+        refreshID = nil
         if !demo { backend = VeraCryptBackend(appURL: URL(fileURLWithPath: appPath)) }
         backendInfo = nil
         await refresh()
     }
 
     func refresh() async {
-        guard busyPath == nil, !isRefreshing else { return }
-        isRefreshing = true
-        defer { isRefreshing = false }
+        guard busyPath == nil, refreshID == nil else { return }
+        let id = UUID()
+        refreshID = id
+        defer { if refreshID == id { refreshID = nil } }
+        let source = backend
         do {
-            if backendInfo == nil { backendInfo = try await backend.probe() }
-            state.apply(try await backend.list())
-            setupMessage = nil
+            let info: BackendInfo
+            if let known = backendInfo { info = known }
+            else { info = try await source.probe() }
+            let mounts = try await source.list()
+            guard refreshID == id else { return }
+            if backendInfo != info { backendInfo = info }
+            if !state.isFresh || state.mounts.count != mounts.count || !mounts.allSatisfy(state.mounts.contains) {
+                state.apply(mounts)
+            }
+            if setupMessage != nil { setupMessage = nil }
         } catch {
-            state.invalidate()
-            setupMessage = readable(error)
-            backendInfo = nil
+            guard refreshID == id else { return }
+            if state.isFresh { state.invalidate() }
+            let message = readable(error)
+            if setupMessage != message { setupMessage = message }
+            if backendInfo != nil { backendInfo = nil }
         }
     }
 
+    private func beginOperation(at path: String) {
+        // The operation performs its own checks. Discard any earlier poll still in flight.
+        refreshID = nil
+        busyPath = path
+    }
+
     func setDemo(_ enabled: Bool) async {
-        guard busyPath == nil, !isRefreshing else { return }
+        guard busyPath == nil else { return }
         // Do not abandon tracking of real mounts by changing backend.
         guard demo || state.managedPaths.isEmpty else {
             notice = "Eject your managed volumes before entering demo mode."
@@ -93,7 +111,7 @@ final class AppModel {
 
     func unlock(_ volume: SavedVolume, password: String, readOnly: Bool, openAfter: Bool) async -> Bool {
         guard canOperate else { return false }
-        busyPath = volume.path
+        beginOperation(at: volume.path)
         notice = nil
         defer { busyPath = nil }
         guard await verifyBackend() else { return false }
@@ -123,7 +141,7 @@ final class AppModel {
 
     func eject(_ mount: Mount) async -> Bool {
         guard canOperate, state.managedPaths.contains(mount.container) else { return false }
-        busyPath = mount.container
+        beginOperation(at: mount.container)
         notice = nil
         defer { busyPath = nil }
         guard await verifyBackend() else { return false }
@@ -161,7 +179,7 @@ final class AppModel {
         guard canCreate, let installed = backend as? VeraCryptBackend else {
             throw CocoaError(.userCancelled)
         }
-        busyPath = url.path
+        beginOperation(at: url.path)
         defer { busyPath = nil }
         try await installed.create(at: url, sizeMiB: sizeMiB, password: password)
         notice = nil

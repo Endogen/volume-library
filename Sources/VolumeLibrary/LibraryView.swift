@@ -67,7 +67,7 @@ struct LibraryView: View {
                     .font(.system(size: 11)).foregroundStyle(.secondary)
                 Spacer()
                 Button { Task { await model.refresh(); controller.updateStatusIcon() } } label: { Image(systemName: "arrow.clockwise") }
-                    .help("Refresh status").accessibilityLabel("Refresh status").disabled(model.busyPath != nil || model.isRefreshing)
+                    .help("Refresh status").accessibilityLabel("Refresh status").disabled(model.busyPath != nil)
                 Button("Move to Menu Bar", systemImage: "menubar.rectangle", action: controller.moveToMenuBar)
                 Button { controller.showSettings() } label: { Image(systemName: "gearshape") }.accessibilityLabel("Settings")
             }.padding(.horizontal, 20).padding(.vertical, 12)
