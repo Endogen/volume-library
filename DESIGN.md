@@ -1,6 +1,6 @@
 # Native macOS VeraCrypt frontend design
 
-Draft for implementation planning · 5 November 2026
+Concept selected 5 November 2026 · Local build verified 10 November 2026
 
 Project directory: `/Users/endogen/Projekte/veracrypt-mac`  
 Working interface name: **Volume Library**. Final product name is undecided; the project folder is not a public branding decision.
@@ -11,7 +11,7 @@ Build a small native Mac app for opening and ejecting existing VeraCrypt contain
 
 The first release should make the daily workflow feel like a Mac utility: choose a volume, unlock it, open it in Finder, and eject it when finished. It must remain useful with its main window closed. No account, cloud service, telemetry, or networking is required for the core workflow.
 
-This document defines proposed behavior and architecture. The concept images illustrate visual alternatives; they are not running software. Visual selection and the backend feasibility checks below precede implementation.
+**Implemented direction — Concept 3, Menu Bar First.** The local SwiftUI/AppKit build pairs a 352 × 520 point menu bar popover with a compact library and a separate unlock window. The installed VeraCrypt 1.26.31 FUSE-T build passed a disposable-container read-only mount and eject on this Mac. The remaining sections record the original design targets. The README identifies the features and platform combination in the current build. [Build and usage](README.md)
 
 ## Scope
 
@@ -45,7 +45,7 @@ These numbers match the order the images appeared in the design conversation. Al
 
 ![Concept 3 Menu Bar First](design/03-menu-bar-first.png)
 
-Recommended starting structure: Concept 1 for the full window, with a compact menu bar surface available in every direction. Final layout remains open for selection. The following dimensions are implementation targets in macOS points, not measurements inferred from generated pixels.
+Concept 3 is selected. The full-window inspector remains an alternative study. The implementation uses a 720 × 520 point library with a 620 × 420 minimum. The following dimensions are implementation targets in macOS points, not measurements inferred from generated pixels.
 
 ## Main window layout
 
@@ -68,7 +68,7 @@ Long paths truncate in the middle with a selectable full path in details. File n
 
 ## Menu bar and window lifecycle
 
-On macOS, the requested system tray behavior is a **menu bar extra**. It is persistent app access, not the yellow window minimize button. A `MenuBarExtra` with window style is the starting implementation; AppKit handles activation and window lifecycle where necessary. Apple documents both persistent access and the popover-style window variant. [MenuBarExtra](https://developer.apple.com/documentation/swiftui/menubarextra)
+On macOS, the requested system tray behavior is a **menu bar extra**. It is persistent app access, not the yellow window minimize button. The implementation uses an AppKit `NSStatusItem` and `NSPopover` hosting the SwiftUI menu. AppKit owns activation and window lifecycle. Apple documents both persistent access and the popover-style window variant. [MenuBarExtra](https://developer.apple.com/documentation/swiftui/menubarextra)
 
 The popover is approximately 340 points wide, with a maximum height near 520 points and scrolling for long lists. Its order is mounted managed volumes, favorite locked volumes, then Open Volume Library, Add Volume, Eject All, Settings, and Quit. Show a mounted count and a last-check warning when state is uncertain. Do not expose paths in the popover unless needed to disambiguate duplicate names. Icon tooltips identify each action and volume.
 
@@ -179,7 +179,7 @@ Logs contain operation categories, durations, and redacted error classes by defa
 
 ## Feasibility checks before implementation
 
-Run these against disposable containers, never the user's real data. Capture a supported combination of macOS, architecture, VeraCrypt release, and filesystem integration. No installed-backend behavior has yet been validated for this project.
+Run these against disposable containers, never the user's real data. Capture a supported combination of macOS, architecture, VeraCrypt release, and filesystem integration. The read-only path, including stdin, filesystem mount, status reconciliation, and eject, passed on macOS 27.0.1 with Apple silicon, VeraCrypt 1.26.31, and FUSE-T 1.2.9. Interactive administrator escalation and busy-volume recovery remain outside the live verification.
 
 | Check | Required outcome |
 | --- | --- |
@@ -197,7 +197,7 @@ If elevation cannot work reliably through the installed CLI, decide whether to a
 
 ## Delivery sequence and acceptance
 
-1. **Select the visual direction.** Resolve the preferred full-window structure; keep menu bar behavior common.
+1. **Select the visual direction.** Concept 3 was chosen, including its supporting compact library.
 2. **Prove the backend.** Complete the disposable-container checks and record the supported version matrix and authorization mechanism.
 3. **Build the native shell with a fake backend.** Implement shared state, library, unlock window, settings, and menu bar lifecycle. Exercise errors and accessibility before using real data.
 4. **Integrate the CLI.** Connect the version-aware adapter and reconciliation; add real mount/eject flows only for validated capabilities.
@@ -209,5 +209,5 @@ Focused automated checks should cover argument safety, password transport bounda
 
 ## Decisions still open
 
-The visual choice, final app name, minimum macOS release, Intel support, exact backend versions, and authorization implementation remain open. The architectural default is an installed executable dependency with no VeraCrypt source fork, no credential persistence, and no privileged helper unless the feasibility work demonstrates a need.
+The development build is named Volume Library, targets macOS 14 or later and accepts VeraCrypt 1.26.31. Intel validation, additional VeraCrypt versions, privileged workflows and public distribution remain open. The architectural default is an installed executable dependency with no VeraCrypt source fork, no credential persistence, and no privileged helper unless the feasibility work demonstrates a need.
 
