@@ -1,46 +1,70 @@
 # Volume Library
 
-Volume Library is a native menu bar app for unlocking existing VeraCrypt file containers on macOS. SwiftUI draws the library and password window. AppKit owns the menu bar icon and windows. The installed VeraCrypt executable handles all cryptography, mounting and ejection.
+Create, unlock and eject VeraCrypt containers from the macOS menu bar. Volume Library provides a native SwiftUI interface and opens mounted volumes in Finder. Your installed copy of VeraCrypt handles encryption and disk access.
 
-## Use it
+**[Download for Apple silicon](https://github.com/Endogen/volume-library/releases/download/v0.1.0/Volume-Library-0.1.0-macOS-arm64.zip)** · [Release notes and checksum](https://github.com/Endogen/volume-library/releases/tag/v0.1.0)
 
-Open `build/Volume Library.app`. Click the lock or drive in the menu bar and choose **Add Volume…**. Choose an existing container, click **Unlock**, and enter its volume password. Newly added volumes default to read-only. Click the folder to open the mounted filesystem in Finder, then click the eject button when finished.
+<table>
+<tr><th align="left">In the menu bar</th><th align="left">In the library</th></tr>
+<tr><td valign="top"><img src="docs/screenshots/menu.png" width="258" alt="Menu bar panel with one mounted volume, favorites and the New Volume command"></td><td valign="top"><img src="docs/screenshots/library.png" width="530" alt="Library showing mounted, locked and unavailable volumes with Finder, eject, unlock and locate actions"></td></tr>
+</table>
 
-Choose **New Volume…** from the menu bar, the library, or **File** (⌘N). Enter the capacity in MiB and confirm a password, then choose a new filename. VeraCrypt creates a standard AES-encrypted FAT container with the default PIM and adds it to your library, ready to unlock.
+Screenshots use sample library entries.
 
-**Move to Menu Bar** hides the app windows and removes its Dock icon. Click the menu bar icon and choose **Open Volume Library** to restore the window. The yellow minimize button retains its usual Dock behavior.
+## Install
 
-Right-click a saved entry to rename it, toggle its favorite status, locate a moved container, or remove its library reference. **Eject All** acts on mounts that this app opened or that you explicitly took over using **Manage**. If you quit with volumes mounted, the app offers distinct choices for ejection and leaving them mounted.
+1. Use an Apple silicon Mac running macOS 14 or later. Version 0.1.0 was tested on macOS 27.0.1 with VeraCrypt **1.26.31** and FUSE-T **1.2.9**. This release accepts that exact VeraCrypt version.
+2. Install [FUSE-T](https://www.fuse-t.org/) and the matching **FUSE-T version** of [VeraCrypt for macOS](https://veracrypt.io/en/Downloads.html). Put VeraCrypt in Applications, or use **Settings → Locate…** to select your copy.
+3. Download and unzip the release, drag **Volume Library.app** to **Applications**, and open it. Click the lock or drive icon in the menu bar.
 
-## Backend and scope
+The download is signed with an **Apple Development** certificate and has not been notarized. Gatekeeper may block its first launch. Apple explains how to review that alert and allow an individual app you trust. [Apple’s guide to opening downloaded apps](https://support.apple.com/en-us/102445)
 
-The verified combination is Apple silicon, macOS 27.0.1, VeraCrypt 1.26.31 for FUSE-T, and FUSE-T 1.2.9. The deployment target is macOS 14. The adapter accepts the official signed VeraCrypt 1.26.31 executable and looks in `/Applications/VeraCrypt.app` by default. Settings can locate another installed copy. [VeraCrypt downloads](https://veracrypt.io/en/Downloads.html)
+To verify the download, put the ZIP and `SHA256SUMS.txt` from the same release in one folder and run:
 
-Use a normal, password-only file container with default PIM. Read/write access requires explicitly confirming that the volume has no hidden volume to protect. In the unlock window, expand **Advanced options**, turn off **Mount read-only**, and confirm the volume type. The live test verified that a file written to a normal FAT container persisted across ejection and a read-only remount. Use VeraCrypt itself for other volume formats, keyfiles, custom PIM, hidden-volume protection and operations that require administrator authorization.
+```sh
+shasum -a 256 -c SHA256SUMS.txt
+```
 
-The app passes the password to VeraCrypt over the subprocess's standard input. Only file references, names, favorites and preferences are saved. The local library lives at `~/Library/Application Support/VolumeLibrary/library.json`.
+## Open an existing container
+
+Choose **Add Volume…** and select your container file. Click **Unlock**, enter the volume password and use the folder button to open it in Finder. The unlock window can also open Finder automatically after mounting.
+
+Newly added volumes default to **read-only**. For write access, open **Advanced options**, turn off **Mount read-only**, and confirm the container is a normal volume with no hidden volume to protect. The wrapper supports passwords with the default PIM. Use VeraCrypt itself for keyfiles, custom PIM, and hidden-volume protection.
+
+## Create a volume
+
+Choose **New Volume…** from the menu bar or library, or press **⌘N**. Set a capacity of at least 5 MiB, enter and confirm a password, then choose a location and filename. The app creates a standard AES-encrypted container with a FAT filesystem and adds it to the library ready to unlock. Creation preserves existing files at the chosen destination.
+
+<img src="docs/screenshots/create.jpg" width="450" alt="The New Volume window asks for capacity, a password and confirmation before choosing a location">
+
+## Manage volumes
+
+- **Favorites and file references.** Right-click a library row to rename it, change its favorite status, or locate a moved file. Removing a reference keeps the container on disk.
+- **Ejection.** Use the eject button when finished. **Eject All** applies to volumes opened here and external mounts you explicitly adopted using **Manage**. Quitting alone can leave files mounted.
+- **Menu bar and startup.** **Move to Menu Bar** hides the windows and Dock icon. **Open Volume Library** brings them back. Settings includes launch at login and system, light or dark appearance.
+- **Local storage.** Volume Library stores bookmarks, display names, favorites and mount preferences in `~/Library/Application Support/VolumeLibrary/library.json`. It passes the password to VeraCrypt through standard input and does not save it.
+
+If Settings reports a missing filesystem library, check that VeraCrypt and its FUSE driver are a matching pair, then choose **Retry**. If macOS prompts for Command Line Tools, the current build uses Apple's `otool` to identify VeraCrypt's FUSE linkage. For a busy volume, close files using it and retry ejection.
 
 ## Build and test
 
-With the Swift 6 toolchain and macOS SDK installed, run these from the project directory.
+Clone the repository on a Mac with a Swift 6 toolchain and macOS SDK, then run:
 
 ```sh
+git clone https://github.com/Endogen/volume-library.git
+cd volume-library
 CONFIGURATION=release ./scripts/build.sh
 open 'build/Volume Library.app'
-swift test
 ```
 
-For the opt-in integration test, install the matching VeraCrypt and FUSE-T builds and run the following. It creates a fresh 5 MB FAT container and a random password, writes a file on a verified read/write mount, ejects, remounts read-only and compares the recovered bytes. It then ejects and removes the fixture.
+The build script produces an ad-hoc-signed app for local use. Run `swift test` for the regular suite. To include the live integration test, install the supported VeraCrypt and FUSE-T builds and run:
 
 ```sh
 VOLUME_LIBRARY_LIVE_TEST=1 swift test
 ```
 
-The build script produces an ad-hoc-signed local app. Public distribution and notarization remain future work. To launch directly into the library or demo, quit the running copy first.
+The live test creates a disposable container, writes a file, ejects the volume, remounts it read-only and compares the recovered bytes. It ejects again and removes the fixture.
 
-```sh
-open 'build/Volume Library.app' --args --show-library
-open 'build/Volume Library.app' --args --demo --show-menu
-```
+[Design document](DESIGN.md) · [Implementation log](WORK_LOG.md) · [Report an issue](https://github.com/Endogen/volume-library/issues)
 
-[Design](DESIGN.md) · [Design verification](design-qa.md) · [Implementation log](WORK_LOG.md)
+Volume Library is an independent frontend for VeraCrypt. The VeraCrypt app and FUSE-T are installed separately.
